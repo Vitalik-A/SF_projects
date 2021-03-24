@@ -1,0 +1,268 @@
+	***Задание 4.1***
+
+select
+    ap.city, count(ap.airport_code)
+from 
+    dst_project.airports ap
+group by 
+    ap.city
+order by 2 desc
+
+
+	***Задание 4.2***
+
+	--//Вопрос 1//--
+	
+select
+    count(distinct fl.status)
+from 
+    dst_project.flights fl
+
+	--//Вопрос 2//--
+	
+select
+    count(fl.status)
+from 
+    dst_project.flights fl
+where fl.status='Departed'
+
+	--//Вопрос 3//--
+	
+select
+    count(st.seat_no)
+from 
+    dst_project.seats st
+where 
+    st.aircraft_code='773'
+	
+	--//Вопрос 4//--
+	
+select
+   count(flight_id)
+from 
+    dst_project.flights fl
+where fl.status='Arrived' 
+    and date_part('year',actual_arrival)=2017 
+    and date_part('month',actual_arrival) in (4,5,6,7,8)	
+	
+
+	***Задание 4.3***
+
+	--//Вопрос 1//--
+	
+select
+   count(flight_id)
+from 
+    dst_project.flights fl
+where fl.status='Cancelled' 	
+
+	--//Вопрос 2//-- т.к. количество самолетов мало, вручную посчитаем нужные самолеты
+	
+select
+   *
+from 
+    dst_project.aircrafts ac
+order by 2
+
+	--//Вопрос 3//-- т.к. частей света не много, вручную посчитаем количество аэропортов в них
+	
+select
+   ap.timezone,
+   count(ap.airport_code)
+from 
+    dst_project.airports ap
+group by ap.timezone  
+order by 2 desc
+
+	--//Вопрос 4//--
+	
+select
+    fl.flight_id, 
+    fl.scheduled_arrival, 
+    fl.actual_arrival, 
+    (fl.actual_arrival-fl.scheduled_arrival) delayed
+from 
+    dst_project.flights fl
+where fl.status='Arrived'
+order by delayed desc
+
+
+	***Задание 4.4***
+
+	--//Вопрос 1//--
+
+select
+    min(fl.scheduled_departure)
+from 
+    dst_project.flights fl
+	
+	--//Вопрос 2//--	
+	
+select
+    max(fl.scheduled_arrival-fl.scheduled_departure)
+from 
+    dst_project.flights fl
+	
+	
+	--//Вопрос 3//--
+
+select
+    fl.departure_airport,
+    fl.arrival_airport,
+    (fl.scheduled_arrival-fl.scheduled_departure) period
+from 
+    dst_project.flights fl
+order by 3 desc
+
+	--//Вопрос 4//--
+	
+select
+    avg(fl.scheduled_arrival-fl.scheduled_departure) period
+from 
+    dst_project.flights fl
+	
+	
+	***Задание 4.5***	
+	
+	--//Вопрос 1//--	
+	
+select 
+    st.fare_conditions,
+    count(st.seat_no)
+from
+    dst_project.seats st
+    join dst_project.aircrafts ac on st.aircraft_code=ac.aircraft_code
+where st.aircraft_code='SU9'
+group by st.fare_conditions	
+
+	--//Вопрос 2//--
+	
+select 
+   min(b.total_amount)
+from
+    dst_project.bookings b	
+	
+	--//Вопрос 3//--
+
+select 
+    bp.seat_no
+from
+    dst_project.tickets tic
+    join dst_project.boarding_passes bp on tic.ticket_no=bp.ticket_no
+where tic.passenger_id='4313 788533'	
+
+	***Задание 5.1***	
+	
+	--//Вопрос 1//--
+
+select 
+    count(fl.flight_id)
+from
+    dst_project.flights fl
+    join dst_project.airports ap on fl.arrival_airport=ap.airport_code
+where ap.city='Anapa' 
+    and date_part('year',fl.actual_arrival)=2017  	
+	
+	--//Вопрос 2//--
+	
+select 
+    count(fl.flight_id)
+from
+    dst_project.flights fl
+    join dst_project.airports ap on fl.departure_airport=ap.airport_code
+where ap.city='Anapa' 
+    and date_part('year', fl.actual_departure)=2017 
+    and date_part('month', fl.actual_departure) in (1,2,12)	
+	
+	--//Вопрос 3//--
+
+select 
+    count(fl.flight_id)
+from
+    dst_project.flights fl
+    join dst_project.airports ap on fl.departure_airport=ap.airport_code
+where ap.city='Anapa' 
+    and fl.status='Cancelled'	
+
+	--//Вопрос 4//--
+
+select 
+    count(fl.flight_id)
+from
+    dst_project.flights fl
+    join dst_project.airports ap on fl.departure_airport=ap.airport_code
+    join dst_project.airports ap1 on fl.arrival_airport=ap1.airport_code
+where ap.city='Anapa'
+    and ap1.city!='Moscow'	
+	
+	--//Вопрос 5//--
+	
+select 
+   ac.model,
+   count(distinct st.seat_no)
+from
+    dst_project.flights fl
+    join dst_project.airports ap on fl.departure_airport=ap.airport_code
+    join dst_project.seats st on fl.aircraft_code=st.aircraft_code
+    join dst_project.aircrafts ac on fl.aircraft_code= ac.aircraft_code
+where ap.city='Anapa'
+group by ac.model
+order by 2 desc	
+
+	--//Итоговое задание//--
+	
+/*т.к. из Анапы летают только 2 типа самолетов, то составим общую выборку из двух таблиц (для боингов и суперджетов)
+при подсчете затрат взял данные потребления топлива боинг - 2,6 т. в час и суперджет- 1,7 т.в час
+т.к. информации по полетам в декабре нет, то подставил среднюю стоимость топлива за январь-февраль 43350 руб за тонну 
+*/
+select 
+    fl.flight_id, --идентификатор рейса
+    fl.departure_airport, -- афропорт отправления
+    fl.arrival_airport, -- аэропорт прибытия
+    fl.aircraft_code, -- код самолета
+    date_part('month', fl.actual_departure) _month,
+    extract(isodow from fl.actual_departure) day_of_week, -- день недели вылета
+    extract(epoch from (fl.actual_arrival-fl.actual_departure))/3600 flight_time,-- время полета в часах
+    sum(tf.amount) cost_ticket, -- вырученная сумма от продажи билетов
+    count(distinct tf.ticket_no) fill, -- количество купленных билетов
+    (extract(epoch from (fl.actual_arrival-fl.actual_departure))/3600)*2.6*43350 expenses,-- затраты на топливо
+    sum(tf.amount)-((extract(epoch from (fl.actual_arrival-fl.actual_departure))/3600)*2.6*43350) benefit--итоговая прибыль
+   
+from dst_project.flights fl
+   full outer join dst_project.ticket_flights tf on fl.flight_id=tf.flight_id -- соединяем таблицы полетов и билетов 
+
+where fl.departure_airport = 'AAQ'
+  and (date_trunc('month', fl.scheduled_departure) in ('2017-01-01','2017-02-01','2017-12-01'))
+  and fl.status not in ('Cancelled')
+  and fl.aircraft_code='733' -- в выборке оставляем только боинги
+
+group by fl.flight_id -- группируем по индификаторам рейсов
+
+union 
+
+select 
+    fl.flight_id,
+    fl.departure_airport,
+    fl.arrival_airport,
+    fl.aircraft_code,
+    date_part('month', fl.actual_departure) _month,
+    extract(isodow from fl.actual_departure) day_of_week,
+    extract(epoch from (fl.actual_arrival-fl.actual_departure))/3600 flight_time,
+    sum(tf.amount) cost_ticket,
+    count(distinct tf.ticket_no) fill,
+    (extract(epoch from (fl.actual_arrival-fl.actual_departure))/3600)*2.6*43350 expenses,
+    sum(tf.amount)-((extract(epoch from (fl.actual_arrival-fl.actual_departure))/3600)*1.7*43350) benefit
+
+from dst_project.flights fl
+   full outer join dst_project.ticket_flights tf on fl.flight_id=tf.flight_id
+
+where fl.departure_airport = 'AAQ'
+  and (date_trunc('month', fl.scheduled_departure) in ('2017-01-01','2017-02-01','2017-12-01'))
+  and fl.status not in ('Cancelled')
+  and fl.aircraft_code='SU9' -- в выборке оставляем только суперджеты
+
+group by fl.flight_id
+
+order by benefit
+
+
